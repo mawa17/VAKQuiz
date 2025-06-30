@@ -1,0 +1,27 @@
+@import '_content/Microsoft.AspNetCore.Components.QuickGrid/Microsoft.AspNetCore.Components.QuickGrid.25o87uqmvr.bundle.scp.css';
+
+/* _content/BlazorApp/Components/Controls/QuestionPrompt.razor.rz.scp.css */
+table > tbody > tr > td[b-nnw9fpzr55] > label > input[type="radio"] {
+    appearance: none; /*Disable default o circle for radio-input*/
+}
+/* _content/BlazorApp/Components/Layout/MainLayout.razor.rz.scp.css */
+#blazor-error-ui[b-qgsvw684bo] {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss[b-qgsvw684bo] {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }

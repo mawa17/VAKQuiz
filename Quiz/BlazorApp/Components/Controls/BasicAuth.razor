@@ -1,0 +1,66 @@
+﻿﻿@using Microsoft.Net.Http.Headers
+@inject IBasicAuthService AuthService
+@inject IHttpContextAccessor Accessor
+@inject IDataService DataService
+@inject NavigationManager NavManager
+
+@code {
+    [Parameter, EditorRequired] public string Username { get; init; } = null!;
+    [Parameter, EditorRequired] public string Password { get; init; } = null!;
+    [Parameter] public string Realm { get; init; } = "AuthRealm";
+    [Parameter] public RenderFragment? ChildContent { get; init; }
+
+    private HttpContext Context => Accessor!.HttpContext!;
+
+    private string Key => $"{Realm}-{Context.Connection.Id}";
+
+
+    protected override void OnInitialized()
+    {
+        if (Accessor?.HttpContext == null)
+            throw new NullReferenceException($"{nameof(Accessor)} service missing!");
+
+            
+        if (String.IsNullOrWhiteSpace(Username) || String.IsNullOrWhiteSpace(Password))
+            throw new ArgumentNullException("Username and Password are required");
+    }
+
+    
+
+    private void RequestAuthorization()
+    {
+        if (!Context.Response.HasStarted)
+        {
+            Context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+            Context.Response.Headers.Pragma = "no-cache";
+            Context.Response.Headers.Expires = "0";
+            Context.Response.Headers.WWWAuthenticate = $"Basic realm=\"{Realm}\"";
+            Context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        }
+    }
+
+    public void Login()
+    {
+        AuthService.Login(Key);
+        NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+    }
+
+    public void Logout()
+    {
+        AuthService.Logout(Key);
+        NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+    }
+}
+
+@if (AuthService.IsAuthenticated(Key))
+{
+    <button @onclick="Logout" type="button" class="btn btn-outline-danger btn-sm">Logout</button>
+    @ChildContent
+}
+else
+{
+    <div class="d-flex flex-column justify-content-center align-items-center vh-100">
+        <h1 class="mb-3">401 Unauthorized - Authentication Required</h1>
+        <button @onclick="Login" type="button" class="btn btn-outline-primary">Login</button>
+    </div>
+}

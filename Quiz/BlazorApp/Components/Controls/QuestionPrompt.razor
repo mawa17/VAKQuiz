@@ -1,0 +1,67 @@
+﻿@rendermode InteractiveServer
+
+<div class="position-relative overflow-auto">
+    <div class="table-responsive mb-5">
+        <table class="table table-secondary table-bordered text-center m-0 table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col" class="text-start">@Question.Text</th>
+                    @for (int j = 0; j < Question.Options.Count; j++)
+                    {
+                        <th scope="col" class="text-center" style="width: 160px;">Mit @((j == 0) ? "første" : (j == Question.Options.Count - 1) ? "sidste" : $"{j + 1}.") valg</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (int _ = 0; _ < Question.Options.Count; _++)
+                {
+                    int y = _;
+                    var option = Question.Options[y];
+                    <tr>
+                        <td class="table-dark text-start">@option</td>
+                        <InputRadioGroup @bind-Value="State.grid[y]">
+                            @for (int __ = 0; __ < Question.Options.Count; __++)
+                            {
+                                int x = __;
+                                string prefix = $"{x}{y}";
+                                string elementPrefix = $"InputRadioId-{guid}{prefix}";
+                                string columnPrefix = $"SET{x}";
+                                string valuePrefix = $"SET{prefix}";
+                                bool isCellSelected = State.grid[y] == valuePrefix;
+                                bool isColumnSelected = State.grid.Any(val => val?.StartsWith(columnPrefix) == true);
+                                bool isRowSelected = State.grid[y] != null;
+                                bool isCellDisabled = isColumnSelected && !isCellSelected;
+                                bool isRowColFree = !isColumnSelected && !isRowSelected;
+                                string cursorStyle = isCellDisabled ? "cursor: not-allowed;" : "cursor: pointer;";
+                                string? cellText = isCellSelected ? "X" :
+                                                   isRowColFree ? "O" :
+                                                   !isCellDisabled ? "⨂" : "";
+                                <td class="position-relative p-0 m-0" style="@(isColumnSelected ? $"{cursorStyle}" : null)">
+                                    <label for="@elementPrefix"
+                                        style="cursor: pointer; @(isCellDisabled ? "pointer-events: none;" : null)"
+                                        class="@(isCellSelected ? "bg-success" : null) bg-opacity-50 position-absolute d-flex align-items-center justify-content-center w-100 h-100">
+                                        @(new MarkupString($"<big>{cellText}</big>"))
+                                        <InputRadio @onclick="() => ToggleColumnSelection(x, y)" Value="@($"SET{prefix}")" id="@elementPrefix" disabled="@(isCellDisabled)" />
+                                    </label>
+                                </td>
+                            }
+                        </InputRadioGroup>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="position-absolute bottom-0 start-50 translate-middle-x">
+        <button @onclick="OnSubmitEventAsync" hidden="@(!CanSubmit)" class="btn btn-dark">Submit</button>
+    </div>
+</div>
+
+@{
+#if DEBUG 
+    MarkupString[] markups = {
+        new($"<h1>x:{x}, y:{y}</h1>"),
+        new($"<h1>{String.Join(',', State.answers.Values) ?? "null"}</h1>"),
+    };
+    for (int i = 0; i < markups.Length; i++) @markups[i];
+#endif
+}

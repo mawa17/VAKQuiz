@@ -1,0 +1,17 @@
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\Survey.json
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\bootstrap.bundle.js.map
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\favicon.ico
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\bootstrap.bundle.js
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\SurveyDEBUG.json
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\app.css
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\bootstrap.css
+C:\Users\maw\Desktop\P2\Quiz\BlazorApp\wwwroot\bootstrap.css.map
+wwwroot\app.css
+wwwroot\bootstrap.bundle.js
+wwwroot\bootstrap.bundle.js.map
+wwwroot\bootstrap.css
+wwwroot\bootstrap.css.map
+wwwroot\favicon.ico
+wwwroot\favicon.png
+wwwroot\Survey.json
+wwwroot\SurveyDEBUG.json

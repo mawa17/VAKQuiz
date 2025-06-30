@@ -1,0 +1,31 @@
+﻿@* <EditForm Model="SurveyModel" OnValidSubmit="HandleValidSubmit" class="form-control">
+    <DataAnnotationsValidator />
+    <InputText @bind-Value="SurveyModel.Title"></InputText>
+    <button type="submit" class="btn btn-outline-dark">Submit</button>
+</EditForm>
+
+@if(SurveyModel != null) {
+    <h1>@SurveyModel.Title</h1>
+    @foreach (var question in SurveyModel.Questions) 
+    {
+        <h2>@question.Text</h2>
+        <button>Add option</button>
+        @foreach (var option in question.Options)
+        {
+            <h3>@option</h3>
+            <button>Remove</button>
+        }
+    }
+}
+
+@code {
+
+    [SupplyParameterFromForm]
+    public SurveyModel SurveyModel { get; set; } = default!;
+
+
+    private async Task HandleValidSubmit()
+    {
+        Console.WriteLine("SUBMITTTT");
+    }
+} *@

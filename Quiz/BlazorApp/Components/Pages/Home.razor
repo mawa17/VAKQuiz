@@ -1,0 +1,93 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject AppDbContextService DbService
+@rendermode InteractiveServer
+
+<PageTitle>@(surveyModel?.Title ?? "Survey")</PageTitle>
+
+@{
+
+    #if !DEBUG
+    {
+        if (String.IsNullOrEmpty(username))
+        {
+            <NameForm OnSubmit="(username) => this.username = username" />
+        }
+    }
+    #endif
+    #if !DEBUG
+    if (surveyModel != null && !String.IsNullOrEmpty(username))
+    #else
+    if (surveyModel != null)
+    #endif
+    {
+        <Survey SurveyModel="surveyModel"
+                OnComplete="OnSurveyComplete"
+                SurveyNotice="For hvert af nedenstående udsagn skal du tage stilling til tre svar. Det svar der passer bedst på dig giver du et 3-tal, det svar der passer næstbedst giver du et 2-tal og det svar der passer dårligst giver du et 1-tal." />
+    }
+}
+
+@code {
+    private string username = "";
+    private SurveyModel? surveyModel;
+    protected override async Task OnInitializedAsync()
+    {
+#if DEBUG
+        // Ensure that HttpClient reads the content as UTF-8 encoded JSON.
+        var jsonString = await Http.GetStringAsync("SurveyDEBUG.json");
+#else
+        // Ensure that HttpClient reads the content as UTF-8 encoded JSON.
+        var jsonString = await Http.GetStringAsync("Survey.json");
+#endif
+        // Deserialize the JSON
+        surveyModel = System.Text.Json.JsonSerializer.Deserialize<SurveyModel>(jsonString);
+    }
+
+    private async void OnSurveyComplete(SurveyModel survey) 
+    {
+#if DEBUG
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("OnSurveyComplete");
+        Console.ResetColor();
+#endif
+        int len = survey.Questions.Max(x => x.Options.Count);
+        int[] points = new int[len]; // Track total points for each option index
+
+        for (int i = 0; i < survey.Questions.Count; i++)
+        {
+            QuestionModel? questionOriginal = surveyModel?.Questions.Count > i ? surveyModel.Questions[i] : null;
+            QuestionModel? questionAnswer = survey.Questions[i];
+
+            if (questionOriginal == null) continue;
+
+            for (int j = 0; j < questionAnswer.Options.Count; j++)
+            {
+                // Find index of the original option in the answered list
+                int result = questionAnswer.Options.FindIndex(x => x == questionOriginal.Options[j]);
+
+                if (result != -1) // Ensure option exists in answered list
+                {
+                    // Calculate inverse score
+                    int inverse = questionAnswer.Options.Count - result;
+
+                    // Add score to the corresponding index
+                    points[j] += inverse;
+
+#if DEBUG
+                Console.WriteLine($"Option {questionOriginal.Options[j]} (Index {j}) -> +{inverse} points");
+#endif
+                }
+            }
+        }
+
+#if DEBUG
+    // Display final points for debugging
+    Console.WriteLine("\nTotal Points:");
+    for (int i = 0; i < points.Length; i++)
+    {
+        Console.WriteLine($"Index {i} -> {points[i]} points");
+    }
+#endif
+        await DbService.AddAnswerAsync(new(username, survey, points));
+    }
+}

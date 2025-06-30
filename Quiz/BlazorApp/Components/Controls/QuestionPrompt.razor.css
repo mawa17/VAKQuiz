@@ -1,0 +1,3 @@
+﻿table > tbody > tr > td > ::deeplabel > input[type="radio"] {
+    appearance: none; /*Disable default o circle for radio-input*/
+}

@@ -1,0 +1,39 @@
+﻿
+@{
+	#if !DEBUG 
+	if (SurveyModel.Questions.Count != SurveyPage)
+	{
+		<NavigationLock ConfirmExternalNavigation="true" />
+	}
+	#endif
+}
+
+@if (SurveyNotice == null || IsSurveyNoticeAccepted)
+{
+	<h1 class="d-flex justify-content-center my-4">@(SurveyModel.Questions.Count != SurveyPage ? $"{SurveyModel.Title}" : $"Tak for dine svar")</h1>
+}
+<div class="container-md">
+	@if (SurveyNotice != null && !IsSurveyNoticeAccepted)
+	{
+		<div class="d-flex justify-content-center align-items-center min-vh-100">
+			<div class="text-center">
+				<h1>@SurveyNotice</h1>
+
+				<div class="d-flex align-items-center gap-2 justify-content-center">
+					<button type="submit" class="btn btn-dark" @onclick="() => IsSurveyNoticeAccepted=true">Ok</button>
+				</div>
+			</div>
+		</div>
+	}
+	else if (SurveyModel.Questions.Count != SurveyPage)
+	{
+		<div class="progress rounded-0 bg-secondary h-100" role="progressbar">
+			<div class="progress-bar bg-dark fs-6" style="width: @Math.Round(Progress, 0)%">@($"{SurveyPage + 1}/{SurveyModel.Questions.Count}")</div>
+		</div>
+		@foreach (var question in SurveyModel.Questions.Skip(SurveyPage).Take(1))
+		{
+			<QuestionPrompt Question="question" OnSubmit="Submit" @key=index />
+			index++;
+		}
+	}
+</div>

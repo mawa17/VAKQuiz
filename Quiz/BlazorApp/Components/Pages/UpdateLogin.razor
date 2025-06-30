@@ -1,0 +1,56 @@
+﻿@* @page "/reset" *@
+@rendermode InteractiveServer
+@inject AppDbContextService DbService
+@inject NavigationManager NavManager
+@inject IAlertService alertService
+@using BlazorApp.Services;
+
+<BasicAuth @ref="BasicAuthComponent" Username="@DbService.Login!.Username" Password="@DbService.Login!.Password" Realm="Admin-UpdateLogin">
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="card shadow-lg p-4" style="width: 350px;">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-3">Update Login</h3>
+
+                <EditForm Model="this" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label">New username</label>
+                        <InputText @bind-Value="this.Username" class="form-control" />
+                        <ValidationMessage For="@(() => this.Username)" class="text-danger small" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">New password</label>
+                        <InputText @bind-Value="this.Password" type="password" class="form-control" />
+                        <ValidationMessage For="@(() => this.Password)" class="text-danger small" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Update</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</BasicAuth>
+@code {
+    [Required(ErrorMessage = "Username is required")]
+    public string Username { get; set; } = String.Empty;
+
+    [Required(ErrorMessage = "Password is required")]
+    public string Password { get; set; } = String.Empty;
+
+    private BasicAuth? BasicAuthComponent;
+
+    private async void HandleValidSubmit()
+    {
+        if(!DbService.UpdateLogin(Username, Password)) {
+            Console.WriteLine($"Updated Credentials FAILED");
+            await alertService.ShowAlertAsync("Login Credentials FAILED!");
+            return;
+        }
+        Console.WriteLine($"Updated Credentials\tUsername: {Username}, Password: {Password}");
+        await alertService.ShowAlertAsync("Login Credentials Updated!");
+        BasicAuthComponent?.Logout();
+        NavManager.Refresh(true);
+    }
+}

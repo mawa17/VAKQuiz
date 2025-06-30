@@ -1,0 +1,135 @@
+﻿@page "/admin"
+@rendermode InteractiveServer
+@inject AppDbContextService DbService
+
+@* <BasicAuth Username="@DbService.Login!.Username" Password="@DbService.Login!.Password" Realm="Admin-ViewPanel"> *@
+<div class="position-relative overflow-auto">
+    <div class="table-responsive mb-5">
+        <div class="m-3">
+            <input type="text" class="form-control mb-2" @bind="searchQuery" @bind:event="oninput" placeholder="Search..." />
+
+            <QuickGrid Items="FilteredAnswers.AsQueryable()" class="table table-secondary table-bordered text-center table-striped">
+                <PropertyColumn Property="@(p => p.Survey.Title)" Title="SurveyTitle" Sortable="true" />
+                <PropertyColumn Property="@(p => p.Name)" Title="Participant's name" Sortable="true" />
+                <PropertyColumn Property="@(p => String.Join(" | ", GetPoints(p.Points)))" Title="Points" Sortable="true" />
+                <TemplateColumn>
+                    <button @onclick="() => OnSelectSurvey(context.Id)" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#SurveyAnswerModal">View Answers</button>
+                    <button @onclick="() => OnSelectSurvey(context.Id)" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Delete</button>
+                </TemplateColumn>
+            </QuickGrid>
+        </div>
+    </div>
+</div>
+
+
+
+@if(this.SelectedEntity != null) {
+
+    //Delete Modal
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">
+                        @($"{SelectedEntity.Survey.Title}{(!String.IsNullOrEmpty(SelectedEntity.Name) ? $" - {SelectedEntity.Name}" : "")} Answers Deletion")
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    //Anwsers Modal
+    <div class="modal fade" id="SurveyAnswerModal" tabindex="-1" aria-labelledby="SurveyAnswerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl px-4" style="max-width: 1920px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="SurveyAnswerModalLabel">
+                        @($"{SelectedEntity.Survey.Title}{(!String.IsNullOrEmpty(SelectedEntity.Name) ? $" - {SelectedEntity.Name}" : "")} Answers")
+                    </h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="position-relative overflow-auto">
+                        <div class="table-responsive">
+                            <table class="table table-secondary table-bordered text-center m-0 table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">Question</th>
+                                        @{
+                                            int len = SelectedEntity.Survey.Questions.Max(x => x.Options.Count);
+                                            @for (int i = 0; i < len; i++)
+                                            {
+                                                <th scope="col" class="text-center">@((i == 0) ? "Første" : (i == len - 1) ? "Sidste" : $"{i + 1}.") valg</th>
+                                            }
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var question in SelectedEntity.Survey.Questions)
+                                    {
+                                        <tr>
+                                            <td>@question.Text</td>
+                                            @foreach (var option in question.Options)
+                                            {
+                                                <td>@option</td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* </BasicAuth> *@
+
+@code {
+    private string searchQuery = string.Empty;
+    private uint Id = 1;
+    static string ToAlpha(int index) {
+        int cycle = index / 26;
+        char letter = (char)('A' + (index % 26));
+        return cycle > 0 ? $"{letter}{cycle}" : letter.ToString();
+    }
+
+    private AnswerModel[] Answers => DbService.Entity.ToArray();
+    private AnswerModel SelectedEntity => Answers.FirstOrDefault(x => x.Id == this.Id);
+
+
+    private IEnumerable<string> GetPoints(IList<int> values) 
+    {
+        for (int i = 0; i < values.Count; i++) yield return $"{ToAlpha(i)} {values[i]}";
+    }
+
+    private void OnDeleteAnswers(int index)
+    {
+        this.Id = (uint)index;
+
+        StateHasChanged();
+    }
+    private void OnSelectSurvey(int index) 
+    {
+        Console.WriteLine(index);
+        this.Id = (uint)index;
+        StateHasChanged();
+    }
+
+    // Filtered answers based on search query
+    private IEnumerable<AnswerModel> FilteredAnswers => Answers.Where(answer =>
+        String.IsNullOrEmpty(searchQuery) ||
+        answer.Survey.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+        answer.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+        String.Join(" | ", GetPoints(answer.Points)).Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
+    );
+}
